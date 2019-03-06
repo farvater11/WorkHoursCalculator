@@ -25,13 +25,33 @@ public class WorkSessionLab {
         return null;
     }
 
+    public void updateSession(WorkSession workSession){
+        for (int i = 0; i< mWorkSessionList.size(); i++ ) {
+            if(mWorkSessionList.get(i).getUUID().equals(workSession.getUUID()))
+                mWorkSessionList.set(i,workSession);
+        }
+    }
+
+    public void addSession(WorkSession workSession){
+        workSession.setDateStart(new Date());
+        workSession.setDateEnd(new Date());
+        mWorkSessionList.add(workSession);
+    }
+
+    public void remSession(UUID uuid){
+        for (WorkSession session:mWorkSessionList){
+            if(session.getUUID().equals(uuid))
+                mWorkSessionList.remove(session);
+        }
+    }
+
     public List<WorkSession> getWorkSessions(){
         return mWorkSessionList;
     }
 
     private WorkSessionLab(){
         mWorkSessionList = new ArrayList<>();
-        for(int i = 0 ; i < 10; i++){
+        for(int i = 0 ; i < 1; i++){
             WorkSession workSession = new WorkSession();
             workSession.setDateStart(new Date());
             workSession.setDateEnd(new Date());

@@ -1,5 +1,7 @@
 package com.example.workhourscalculator;
 
+import android.util.Log;
+
 import java.util.Date;
 import java.util.UUID;
 
@@ -10,7 +12,7 @@ public class WorkSession {
     private UUID mUUID;
 
     public WorkSession(){
-        mUUID = getUUID();
+        mUUID = UUID.randomUUID();
     }
 
     public Date getDateStart() {

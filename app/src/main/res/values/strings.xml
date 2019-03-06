@@ -1,3 +1,14 @@
 <resources>
     <string name="app_name">Work Hours Calculator</string>
+    <string name="add_session">Add</string>
+    <string name="show_subtitle">Show numbers of sessions</string>
+    <string name="hide_subtitle">Hide numbers of sessions</string>
+    <string name="start_time_title_alert">Choose start work session</string>
+    <string name="positive_button_text">OK</string>
+    <string name="end_time_title_alert">Choose end work session</string>
+
+    <plurals name="subtitle_plural">
+        <item quantity="one">%1$d work session</item>
+        <item quantity="other">%1$d work sessions</item>
+    </plurals>
 </resources>
