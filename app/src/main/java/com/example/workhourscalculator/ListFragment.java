@@ -8,10 +8,10 @@ import android.support.annotation.Nullable;
 import android.support.constraint.ConstraintLayout;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
+import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -35,10 +35,18 @@ import java.util.UUID;
 
 public class ListFragment extends Fragment {
     private static final String SAVED_SUBTITLE_KEY = "saved subtitle state";
-    private static final int REQUEST_START_DATE = 0;
-    private static final int REQUEST_END_DATE = 1;
-    private static final String DIALOG_START_DATE = "DialogDateStart";
-    private static final String DIALOG_END_DATE = "DialogDateEnd";
+    private static final int REQUEST_START_TIME = 0;
+    private static final int REQUEST_END_TIME = 1;
+    private static final int REQUEST_START_DATE = 2;
+    private static final int REQUEST_END_DATE = 3;
+    private static final int REQUEST_REMOVE = 4;
+
+
+    private static final String DIALOG_START_TIME_TAG = "DialogTimeStart";
+    private static final String DIALOG_END_TIME_TAG = "DialogTimeEnd";
+    private static final String DIALOG_START_DATE_TAG = "DialogDateStart";
+    private static final String DIALOG_END_DATE_TAG = "DialogDateEnd";
+    private static final String DIALOG_REMOVE_TAG = "DialogRemove";
 
     private List<WorkSession> mWorkSessions;
     private RecyclerView mRecyclerView;
@@ -55,20 +63,32 @@ public class ListFragment extends Fragment {
 
         WorkSession modifyWorkSession = mWorkSessions.get(mClickedItemIndex); // Получаем кликнутый элемент
         switch (requestCode){
-            case REQUEST_START_DATE:
-                Date dateStart = (Date) data.getSerializableExtra(TimePickerFragment.EXTRA_SEND_DATE);
+            case REQUEST_START_TIME:
+                Date timeStart = (Date) data.getSerializableExtra(TimePickerFragment.EXTRA_SEND_DATE);
                 //Получаем дату измененную, как узнать какому item было изменено? Чтоб ему установить
-                modifyWorkSession.setDateStart(dateStart);// заменяем дату в кликнутом item
+                modifyWorkSession.setDateStart(timeStart);// заменяем дату в кликнутом item
                 WorkSessionLab.get().updateSession(modifyWorkSession); //обновляем в Lab этот элемент
-                updateUI();
+                break;
+            case REQUEST_END_TIME:
+                Date timeEnd = (Date) data.getSerializableExtra(TimePickerFragment.EXTRA_SEND_DATE);
+                modifyWorkSession.setDateEnd(timeEnd);// заменяем дату в кликнутом item
+                WorkSessionLab.get().updateSession(modifyWorkSession); //обновляем в Lab этот элемент
+                break;
+            case REQUEST_START_DATE:
+                Date dateStart = (Date) data.getSerializableExtra(DatePickerFragment.EXTRA_SEND_DATE);
+                modifyWorkSession.setDateStart(dateStart);
+                WorkSessionLab.get().updateSession(modifyWorkSession);
                 break;
             case REQUEST_END_DATE:
-                Date dateEnd = (Date) data.getSerializableExtra(TimePickerFragment.EXTRA_SEND_DATE);
-                modifyWorkSession.setDateEnd(dateEnd);// заменяем дату в кликнутом item
-                WorkSessionLab.get().updateSession(modifyWorkSession); //обновляем в Lab этот элемент
-                updateUI();
+                Date dateEnd = (Date) data.getSerializableExtra(DatePickerFragment.EXTRA_SEND_DATE);
+                modifyWorkSession.setDateEnd(dateEnd);
+                WorkSessionLab.get().updateSession(modifyWorkSession);
+                break;
+            case REQUEST_REMOVE:
+                WorkSessionLab.get().remSession(mWorkSessions.get(mClickedItemIndex).getUUID());
                 break;
         }
+        updateUI();
     }
 
     @Override
@@ -85,11 +105,7 @@ public class ListFragment extends Fragment {
          View v = inflater.inflate(R.layout.fragment_date_list,container,false);
          mRecyclerView = (RecyclerView) v.findViewById(R.id.work_recyclerView);
          mRecyclerView.setLayoutManager(new LinearLayoutManager(getActivity()));
-
          updateUI();
-         //mWorkSessions = WorkSessionLab.get().getWorkSessions();
-         //mAdapter = new WorkSessionAdapter(mWorkSessions);
-         //mRecyclerView.setAdapter(mAdapter);
          return v;
     }
 
@@ -153,13 +169,11 @@ public class ListFragment extends Fragment {
 //End modification UI section
 
 
-    private class WorkSessionHolder extends RecyclerView.ViewHolder implements View.OnClickListener{
+    private class WorkSessionHolder extends RecyclerView.ViewHolder implements View.OnClickListener, View.OnLongClickListener{
         private LinearLayout mStartLayout;
         private LinearLayout mEndLayout;
         private TextView mStartTimeTextView;
         private TextView mEndTimeTextView;
-
-        private ConstraintLayout mMainItemLayout;
 
         private TextView mStartDayOfMonthTextView;
         private TextView mStartDayOfWeekTextView;
@@ -168,13 +182,10 @@ public class ListFragment extends Fragment {
         private TextView mNumberOfHoursTextView;
         private TextView mNumberOfMinuteTextView;
 
-        private UUID mUUID;
-
 
         public WorkSessionHolder(LayoutInflater layoutInflater, ViewGroup parent){
+            //super(layoutInflater.inflate(R.layout.dialog_delete,parent,false));
             super(layoutInflater.inflate(R.layout.list_item_date,parent,false));
-
-            mMainItemLayout = (ConstraintLayout) itemView.findViewById(R.id.main_item_layout);
 
             mStartLayout = (LinearLayout) itemView.findViewById(R.id.start_date_layout);
             mEndLayout = (LinearLayout) itemView.findViewById(R.id.end_date_layout);
@@ -194,20 +205,13 @@ public class ListFragment extends Fragment {
             mStartTimeTextView.setOnClickListener(this);
             mEndTimeTextView.setOnClickListener(this);
 
-            mMainItemLayout.setOnLongClickListener(new View.OnLongClickListener() {
-                @Override
-                public boolean onLongClick(View v) {
-                    Toast.makeText(getActivity(),"Dele", Toast.LENGTH_SHORT).show();
-                    return false;
-                }
-            });
-
+            itemView.setOnLongClickListener(this);
         }
 
         public void bind(WorkSession workSession){
             Date startDate = workSession.getDateStart();
             Date endDate = workSession.getDateEnd();
-            mUUID = workSession.getUUID();
+
             int numberOfHours = Hours.hoursBetween(new DateTime((startDate)),new DateTime(endDate)).getHours();
             int numberOfMinutes = Minutes.minutesBetween(new DateTime(startDate), new DateTime(endDate)).getMinutes();
 
@@ -215,12 +219,12 @@ public class ListFragment extends Fragment {
             SimpleDateFormat dateFormatDayOfWeek = new SimpleDateFormat("EEEE");
             SimpleDateFormat dateFormatDayOfMonth = new SimpleDateFormat("dd MMM");
             SimpleDateFormat dateFormatTime = new SimpleDateFormat("HH:mm");
-            mStartDayOfMonthTextView.setText(dateFormatDayOfMonth.format(startDate));
-            mStartDayOfWeekTextView.setText(dateFormatDayOfWeek.format(startDate));
-            mEndDayOfMonthTextView.setText(dateFormatDayOfMonth.format(endDate));
-            mEndtDayOfWeekTextView.setText(dateFormatDayOfWeek.format(endDate));
-            mStartTimeTextView.setText(dateFormatTime.format(startDate));
-            mEndTimeTextView.setText(dateFormatTime.format(endDate));
+            mStartDayOfMonthTextView.setText(FormatLab.getDateFormatDayOfMonth().format(startDate));
+            mStartDayOfWeekTextView.setText(FormatLab.getDateFormatDayOfWeek().format(startDate));
+            mEndDayOfMonthTextView.setText(FormatLab.getDateFormatDayOfMonth().format(endDate));
+            mEndtDayOfWeekTextView.setText(FormatLab.getDateFormatDayOfWeek().format(endDate));
+            mStartTimeTextView.setText(FormatLab.getDateFormatTime().format(startDate));
+            mEndTimeTextView.setText(FormatLab.getDateFormatTime().format(endDate));
         // ====
 
             mNumberOfHoursTextView.setText(String.valueOf(numberOfHours));
@@ -232,26 +236,45 @@ public class ListFragment extends Fragment {
         @Override
         public void onClick(View v) {
             mClickedItemIndex = getLayoutPosition();
+            FragmentManager fragmentManager = getFragmentManager();
+
             switch (v.getId()){
                 case R.id.start_date_layout:
+                    DatePickerFragment datePickerFragment = DatePickerFragment.newInstance(
+                            mWorkSessions.get(mClickedItemIndex).getDateStart(), R.string.start_date_title_alert);
+                    datePickerFragment.setTargetFragment(ListFragment.this, REQUEST_START_DATE);
+                    datePickerFragment.show(fragmentManager, DIALOG_START_DATE_TAG);
                     break;
                 case R.id.end_date_layout:
+                    DatePickerFragment datePickerFragment1 = DatePickerFragment.newInstance(
+                            mWorkSessions.get(mClickedItemIndex).getDateEnd(), R.string.end_date_title_alert);
+                    datePickerFragment1.setTargetFragment(ListFragment.this, REQUEST_END_DATE);
+                    datePickerFragment1.show(fragmentManager, DIALOG_END_DATE_TAG);
                     break;
                 case R.id.start_time_textView:
-                    FragmentManager fragmentManager = getFragmentManager();
                     TimePickerFragment timePickerFragment = TimePickerFragment.newInstance(
-                            WorkSessionLab.get().getWorkSession(mUUID).getDateStart(),R.string.start_time_title_alert);
-                    timePickerFragment.setTargetFragment(ListFragment.this, REQUEST_START_DATE);
-                    timePickerFragment.show(fragmentManager, DIALOG_START_DATE);
+                            mWorkSessions.get(mClickedItemIndex).getDateStart(), R.string.start_time_title_alert);
+                    timePickerFragment.setTargetFragment(ListFragment.this, REQUEST_START_TIME);
+                    timePickerFragment.show(fragmentManager, DIALOG_START_TIME_TAG);
                     break;
                 case R.id.end_time_textView:
-                    FragmentManager fragmentManager1 = getFragmentManager();
                     TimePickerFragment timePickerFragment1 = TimePickerFragment.newInstance(
-                            WorkSessionLab.get().getWorkSession(mUUID).getDateEnd(), R.string.end_time_title_alert);
-                    timePickerFragment1.setTargetFragment(ListFragment.this, REQUEST_END_DATE);
-                    timePickerFragment1.show(fragmentManager1, DIALOG_END_DATE);
+                            mWorkSessions.get(mClickedItemIndex).getDateEnd(), R.string.end_time_title_alert);
+                    timePickerFragment1.setTargetFragment(ListFragment.this, REQUEST_END_TIME);
+                    timePickerFragment1.show(fragmentManager, DIALOG_END_TIME_TAG);
                     break;
             }
+        }
+
+        @Override
+        public boolean onLongClick(View v) {
+            mClickedItemIndex = getLayoutPosition();
+            FragmentManager fragmentManager = getFragmentManager();
+            RemoveFragment removeFragment = RemoveFragment.newInstance(mWorkSessions.get(mClickedItemIndex).getUUID());
+            removeFragment.setTargetFragment(ListFragment.this, REQUEST_REMOVE);
+            removeFragment.show(fragmentManager, DIALOG_REMOVE_TAG);
+            Toast.makeText(getActivity(),"Picked item#" + mClickedItemIndex, Toast.LENGTH_SHORT).show();
+            return true;
         }
     }
 

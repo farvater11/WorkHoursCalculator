@@ -6,6 +6,11 @@
     <string name="start_time_title_alert">Choose start work session</string>
     <string name="positive_button_text">OK</string>
     <string name="end_time_title_alert">Choose end work session</string>
+    <string name="start_date_title_alert">Choose start date</string>
+    <string name="end_date_title_alert">Choose end date</string>
+    <string name="remove_question">Remove work session?</string>
+    <string name="delete_button_text">Delete</string>
+    <string name="negative_button_text">Cancel</string>
 
     <plurals name="subtitle_plural">
         <item quantity="one">%1$d work session</item>

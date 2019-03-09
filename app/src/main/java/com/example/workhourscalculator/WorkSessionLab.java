@@ -40,8 +40,10 @@ public class WorkSessionLab {
 
     public void remSession(UUID uuid){
         for (WorkSession session:mWorkSessionList){
-            if(session.getUUID().equals(uuid))
+            if(session.getUUID().equals(uuid)){
                 mWorkSessionList.remove(session);
+                return;
+            }
         }
     }
 
