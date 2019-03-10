@@ -28,6 +28,7 @@ import org.joda.time.Hours;
 import org.joda.time.Minutes;
 
 import java.text.SimpleDateFormat;
+import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
 import java.util.UUID;
@@ -54,6 +55,7 @@ public class ListFragment extends Fragment {
     private boolean mVisibleSubtitle;
     protected int mClickedItemIndex;
 
+    private RecyclerView.LayoutManager mLayoutManager;
 
     @Override
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
@@ -68,27 +70,32 @@ public class ListFragment extends Fragment {
                 //Получаем дату измененную, как узнать какому item было изменено? Чтоб ему установить
                 modifyWorkSession.setDateStart(timeStart);// заменяем дату в кликнутом item
                 WorkSessionLab.get().updateSession(modifyWorkSession); //обновляем в Lab этот элемент
+                updateUI(mClickedItemIndex);
                 break;
             case REQUEST_END_TIME:
                 Date timeEnd = (Date) data.getSerializableExtra(TimePickerFragment.EXTRA_SEND_DATE);
                 modifyWorkSession.setDateEnd(timeEnd);// заменяем дату в кликнутом item
                 WorkSessionLab.get().updateSession(modifyWorkSession); //обновляем в Lab этот элемент
+                updateUI(mClickedItemIndex);
                 break;
             case REQUEST_START_DATE:
                 Date dateStart = (Date) data.getSerializableExtra(DatePickerFragment.EXTRA_SEND_DATE);
                 modifyWorkSession.setDateStart(dateStart);
                 WorkSessionLab.get().updateSession(modifyWorkSession);
+                updateUI(mClickedItemIndex);
                 break;
             case REQUEST_END_DATE:
                 Date dateEnd = (Date) data.getSerializableExtra(DatePickerFragment.EXTRA_SEND_DATE);
                 modifyWorkSession.setDateEnd(dateEnd);
                 WorkSessionLab.get().updateSession(modifyWorkSession);
+                updateUI(mClickedItemIndex);
                 break;
             case REQUEST_REMOVE:
                 WorkSessionLab.get().remSession(mWorkSessions.get(mClickedItemIndex).getUUID());
+                updateUI(null);
                 break;
         }
-        updateUI();
+        //updateUI(null);
     }
 
     @Override
@@ -104,8 +111,9 @@ public class ListFragment extends Fragment {
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
          View v = inflater.inflate(R.layout.fragment_date_list,container,false);
          mRecyclerView = (RecyclerView) v.findViewById(R.id.work_recyclerView);
-         mRecyclerView.setLayoutManager(new LinearLayoutManager(getActivity()));
-         updateUI();
+         mLayoutManager = new LinearLayoutManager(getActivity());
+         mRecyclerView.setLayoutManager(mLayoutManager);
+         updateUI(null);
          return v;
     }
 
@@ -132,7 +140,9 @@ public class ListFragment extends Fragment {
         switch (item.getItemId()){
             case R.id.add_item_menu:
                 WorkSessionLab.get().addSession(new WorkSession());
-                updateUI();
+                mClickedItemIndex = WorkSessionLab.get().getWorkSessions().size()-1; // Get future position new item
+                updateUI(mClickedItemIndex);
+                mLayoutManager.scrollToPosition(mClickedItemIndex); // Scroll to new item
                 return true;
             case R.id.show_subtitle:
                 mVisibleSubtitle =! mVisibleSubtitle;
@@ -145,7 +155,7 @@ public class ListFragment extends Fragment {
 
 
 //Modification UI section
-    private void updateUI(){//update ui and adapter in recyclerView
+    private void updateUI(@Nullable Object itemPos){//update ui and adapter in recyclerView
         mWorkSessions = WorkSessionLab.get().getWorkSessions();
         if (mAdapter == null){
             mAdapter = new WorkSessionAdapter(mWorkSessions);
@@ -153,7 +163,10 @@ public class ListFragment extends Fragment {
         }
         else {
             mAdapter.setWorkSessions(mWorkSessions);
-            mAdapter.notifyDataSetChanged();
+            if(itemPos == null)
+                mAdapter.notifyDataSetChanged();
+            else
+                mAdapter.notifyItemChanged((int)itemPos);
         }
         updateSubtitle();
     }
@@ -211,25 +224,46 @@ public class ListFragment extends Fragment {
         public void bind(WorkSession workSession){
             Date startDate = workSession.getDateStart();
             Date endDate = workSession.getDateEnd();
+            int color;
+            int weekendColor;
 
             int numberOfHours = Hours.hoursBetween(new DateTime((startDate)),new DateTime(endDate)).getHours();
             int numberOfMinutes = Minutes.minutesBetween(new DateTime(startDate), new DateTime(endDate)).getMinutes();
 
-        //Remake this for a using joda.time library!
-            SimpleDateFormat dateFormatDayOfWeek = new SimpleDateFormat("EEEE");
-            SimpleDateFormat dateFormatDayOfMonth = new SimpleDateFormat("dd MMM");
-            SimpleDateFormat dateFormatTime = new SimpleDateFormat("HH:mm");
+
+            if(workSession.isWorkedOut()) {
+                color = getResources().getColor(R.color.Gray);
+                weekendColor = getResources().getColor(R.color.Red);
+            }
+            else{
+                color = getResources().getColor(R.color.DarkGray);
+                weekendColor = getResources().getColor(R.color.DarkRed);
+            }
+
             mStartDayOfMonthTextView.setText(FormatLab.getDateFormatDayOfMonth().format(startDate));
             mStartDayOfWeekTextView.setText(FormatLab.getDateFormatDayOfWeek().format(startDate));
             mEndDayOfMonthTextView.setText(FormatLab.getDateFormatDayOfMonth().format(endDate));
             mEndtDayOfWeekTextView.setText(FormatLab.getDateFormatDayOfWeek().format(endDate));
             mStartTimeTextView.setText(FormatLab.getDateFormatTime().format(startDate));
             mEndTimeTextView.setText(FormatLab.getDateFormatTime().format(endDate));
-        // ====
-
             mNumberOfHoursTextView.setText(String.valueOf(numberOfHours));
             mNumberOfMinuteTextView.setText(String.valueOf(numberOfMinutes % 60));
 
+            mStartDayOfMonthTextView.setTextColor(color);
+            mEndDayOfMonthTextView.setTextColor(color);
+            mEndtDayOfWeekTextView.setTextColor(color);
+            mStartDayOfWeekTextView.setTextColor(color);
+            mStartTimeTextView.setTextColor(color);
+            mEndTimeTextView.setTextColor(color);
+            mNumberOfHoursTextView.setTextColor(color);
+            mNumberOfMinuteTextView.setTextColor(color);
+            if(FormatLab.getDayOfWeek(workSession.getDateStart()) == Calendar.SATURDAY
+                    || FormatLab.getDayOfWeek(workSession.getDateStart()) == Calendar.SUNDAY)
+                mStartDayOfWeekTextView.setTextColor(weekendColor);
+
+            if(FormatLab.getDayOfWeek(workSession.getDateEnd()) == Calendar.SATURDAY
+                    || FormatLab.getDayOfWeek(workSession.getDateEnd()) == Calendar.SUNDAY)
+                mEndtDayOfWeekTextView.setTextColor(weekendColor);
         }
 
 

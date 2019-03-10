@@ -5,15 +5,15 @@
     android:id="@+id/main_item_layout"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:padding="10dp">
+    >
 
     <LinearLayout
         android:id="@+id/start_linearLayout"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginStart="16dp"
+        android:layout_marginStart="8dp"
         android:gravity="end"
-        android:orientation="vertical"
+        android:orientation="horizontal"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent">
@@ -36,15 +36,16 @@
                 android:id="@+id/day_of_week_start_textView"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                tools:text="Monday"
-                android:textSize="25sp" />
+                android:textSize="25sp"
+                tools:text="Mon" />
         </LinearLayout>
 
         <TextView
+            android:layout_gravity="center"
             android:id="@+id/start_time_textView"
-            android:layout_width="match_parent"
+            android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginTop="8dp"
+            android:layout_marginStart="16dp"
             android:gravity="end"
             tools:text="12:40"
             android:textSize="20sp" />
@@ -85,11 +86,20 @@
         android:id="@+id/end_linearLayout"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginEnd="16dp"
-        android:orientation="vertical"
+        android:layout_marginEnd="8dp"
+        android:orientation="horizontal"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintTop_toTopOf="parent">
+
+        <TextView
+            android:layout_gravity="center"
+            android:id="@+id/end_time_textView"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginEnd="16dp"
+            tools:text="23:59"
+            android:textSize="20sp" />
 
         <LinearLayout
             android:id="@+id/end_date_layout"
@@ -108,19 +118,11 @@
                 android:id="@+id/day_of_week_end_textView"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                tools:text="Monday"
+                tools:text="Mon"
                 android:textSize="25sp" />
         </LinearLayout>
 
-        <TextView
-            android:id="@+id/end_time_textView"
 
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="8dp"
-            android:layout_marginEnd="8dp"
-            tools:text="23:59"
-            android:textSize="20sp" />
     </LinearLayout>
 
 </android.support.constraint.ConstraintLayout>

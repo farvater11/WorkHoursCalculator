@@ -17,6 +17,8 @@ import org.joda.time.DateTime;
 import org.joda.time.Hours;
 import org.joda.time.Minutes;
 
+import java.util.Calendar;
+import java.util.Date;
 import java.util.UUID;
 
 public class RemoveFragment extends DialogFragment {
@@ -47,9 +49,13 @@ public class RemoveFragment extends DialogFragment {
 
         UUID uuid = (UUID) getArguments().getSerializable(ARG_RECEIVED_UUID);
         WorkSession workSession = WorkSessionLab.get().getWorkSession(uuid);
+        Date startDate = workSession.getDateStart();
+        Date endDate = workSession.getDateEnd();
 
-        int numberOfHours = Hours.hoursBetween(new DateTime((workSession.getDateStart())),new DateTime(workSession.getDateEnd())).getHours();
-        int numberOfMinutes = Minutes.minutesBetween(new DateTime(workSession.getDateStart()), new DateTime(workSession.getDateEnd())).getMinutes();
+        int color;
+        int weekendColor;
+        int numberOfHours = Hours.hoursBetween(new DateTime((startDate)),new DateTime(endDate)).getHours();
+        int numberOfMinutes = Minutes.minutesBetween(new DateTime(startDate), new DateTime(endDate)).getMinutes();
 
         mStartTimeTextView = (TextView) view.findViewById(R.id.start_time_textView);
         mEndTimeTextView = (TextView) view.findViewById(R.id.end_time_textView);
@@ -61,16 +67,39 @@ public class RemoveFragment extends DialogFragment {
         mNumberOfMinuteTextView = (TextView) view.findViewById(R.id.number_of_minutes_textView);
 
 
-        mStartDayOfMonthTextView.setText(FormatLab.getDateFormatDayOfMonth().format(workSession.getDateStart()));
-        mStartDayOfWeekTextView.setText(FormatLab.getDateFormatDayOfWeek().format(workSession.getDateStart()));
-        mEndDayOfMonthTextView.setText(FormatLab.getDateFormatDayOfMonth().format(workSession.getDateEnd()));
-        mEndtDayOfWeekTextView.setText(FormatLab.getDateFormatDayOfWeek().format(workSession.getDateEnd()));
-        mStartTimeTextView.setText(FormatLab.getDateFormatTime().format(workSession.getDateStart()));
-        mEndTimeTextView.setText(FormatLab.getDateFormatTime().format(workSession.getDateEnd()));
+        if(workSession.isWorkedOut()) {
+            color = getResources().getColor(R.color.Gray);
+            weekendColor = getResources().getColor(R.color.Red);
+        }
+        else{
+            color = getResources().getColor(R.color.DarkGray);
+            weekendColor = getResources().getColor(R.color.DarkRed);
+        }
 
+        mStartDayOfMonthTextView.setText(FormatLab.getDateFormatDayOfMonth().format(startDate));
+        mStartDayOfWeekTextView.setText(FormatLab.getDateFormatDayOfWeek().format(startDate));
+        mEndDayOfMonthTextView.setText(FormatLab.getDateFormatDayOfMonth().format(endDate));
+        mEndtDayOfWeekTextView.setText(FormatLab.getDateFormatDayOfWeek().format(endDate));
+        mStartTimeTextView.setText(FormatLab.getDateFormatTime().format(startDate));
+        mEndTimeTextView.setText(FormatLab.getDateFormatTime().format(endDate));
         mNumberOfHoursTextView.setText(String.valueOf(numberOfHours));
         mNumberOfMinuteTextView.setText(String.valueOf(numberOfMinutes % 60));
 
+        mStartDayOfMonthTextView.setTextColor(color);
+        mEndDayOfMonthTextView.setTextColor(color);
+        mEndtDayOfWeekTextView.setTextColor(color);
+        mStartDayOfWeekTextView.setTextColor(color);
+        mStartTimeTextView.setTextColor(color);
+        mEndTimeTextView.setTextColor(color);
+        mNumberOfHoursTextView.setTextColor(color);
+        mNumberOfMinuteTextView.setTextColor(color);
+        if(FormatLab.getDayOfWeek(workSession.getDateStart()) == Calendar.SATURDAY
+                || FormatLab.getDayOfWeek(workSession.getDateStart()) == Calendar.SUNDAY)
+            mStartDayOfWeekTextView.setTextColor(weekendColor);
+
+        if(FormatLab.getDayOfWeek(workSession.getDateEnd()) == Calendar.SATURDAY
+                || FormatLab.getDayOfWeek(workSession.getDateEnd()) == Calendar.SUNDAY)
+            mEndtDayOfWeekTextView.setTextColor(weekendColor);
 
 
         return new AlertDialog.Builder(getActivity())

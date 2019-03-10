@@ -13,6 +13,7 @@ public class WorkSession {
 
     public WorkSession(){
         mUUID = UUID.randomUUID();
+        mWorkedOut = (mUUID.hashCode()%2 == 0); // For debug!
     }
 
     public Date getDateStart() {

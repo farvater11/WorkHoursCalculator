@@ -41,22 +41,28 @@ public class DatePickerFragment extends DialogFragment {
     public Dialog onCreateDialog(@Nullable Bundle savedInstanceState) {
         View view = LayoutInflater.from(getActivity()).inflate(R.layout.dialog_date_picker, null, false);
 
-        mTitleResId = (int) getArguments().getInt(ARG_RECEIVED_TYPE_OF_DATE);
-        mDate = (Date) getArguments().getSerializable(ARG_RECEIVED_DATE);
-
+        int titleResId = (int) getArguments().getInt(ARG_RECEIVED_TYPE_OF_DATE);
+        Date date = (Date) getArguments().getSerializable(ARG_RECEIVED_DATE);
+/*
         Calendar calendar = Calendar.getInstance();
-        calendar.setTime(mDate);
+        calendar.setTime(date);
         int year = calendar.get(Calendar.YEAR);
         int month = calendar.get(Calendar.MONTH);
         int day = calendar.get(Calendar.DAY_OF_MONTH);
         final int hour = calendar.get(Calendar.HOUR_OF_DAY);
         final int minute = calendar.get(Calendar.MINUTE);
+*/
+        final int hour = FormatLab.getHourOfDay(date);
+        final int minute = FormatLab.getMinute(date);
+        final int year = FormatLab.getYear(date);
+        final int month = FormatLab.getMonth(date);
+        final int day = FormatLab.getDayOfMonth(date);
 
         final DatePicker datePicker = view.findViewById(R.id.date_picker);
         datePicker.updateDate(year,month,day);
 
         return new AlertDialog.Builder(getActivity())
-                .setTitle(mTitleResId)
+                .setTitle(titleResId)
                 .setPositiveButton(R.string.positive_button_text, new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialog, int which) {

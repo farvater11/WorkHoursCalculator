@@ -36,9 +36,10 @@ public class TimePickerFragment extends DialogFragment {
     public Dialog onCreateDialog(@Nullable Bundle savedInstanceState) {
         View view = LayoutInflater.from(getActivity()).inflate(R.layout.dialog_time_picker,null,false);
 
-        int title = (int) getArguments().getInt(ARG_RECEIVED_TYPE_OF_TIME);
+        int titleResId = (int) getArguments().getInt(ARG_RECEIVED_TYPE_OF_TIME);
 
         final Date date = (Date) getArguments().getSerializable(ARG_RECEIVED_DATE);
+        /*
         Calendar calendar = Calendar.getInstance();
         calendar.setTime(date);
         int hour = calendar.get(Calendar.HOUR_OF_DAY);
@@ -46,6 +47,12 @@ public class TimePickerFragment extends DialogFragment {
         final int year = calendar.get(Calendar.YEAR);
         final int month = calendar.get(Calendar.MONTH);
         final int day = calendar.get(Calendar.DAY_OF_MONTH);
+*/
+        int hour = FormatLab.getHourOfDay(date);
+        int minutes = FormatLab.getMinute(date);
+        final int year = FormatLab.getYear(date);
+        final int month = FormatLab.getMonth(date);
+        final int day = FormatLab.getDayOfMonth(date);
 
         final TimePicker timePicker = (TimePicker) view.findViewById(R.id.time_picker);
         timePicker.setIs24HourView(true);
@@ -53,7 +60,7 @@ public class TimePickerFragment extends DialogFragment {
         timePicker.setCurrentMinute(minutes);
 
         return new AlertDialog.Builder(getActivity())
-                .setTitle(title)
+                .setTitle(titleResId)
                 .setPositiveButton(R.string.positive_button_text, new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialog, int which) {
